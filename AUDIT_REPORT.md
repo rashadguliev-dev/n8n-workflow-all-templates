@@ -1,181 +1,243 @@
-# 🔥 АУДИТ РЕПОЗИТОРИЯ N8N ДЛЯ БИЗНЕСА ЭЛЕКТРОНИКИ В ОАЭ
+# 🔥 ГЛУБОКАЯ ПРОВЕРКА РЕПОЗИТОРИЯ N8N
 
-## 🎯 Исполнительное Резюме
-В ходе аудита репозитория `n8n-workflow-all-templates` (7400+ шаблонов) было установлено, что он содержит **90% необходимой инфраструктуры** для создания полностью автоматизированного бизнеса по дропшиппингу.
+## 📋 ЗАДАНИЕ 1: СТРУКТУРА РЕПОЗИТОРИЯ
 
-Мы отобрали лучшие workflow для парсинга цен, синхронизации стоков, ведения соцсетей и AI-поддержки клиентов. Основной пробел — специфическая логистика ОАЭ (Noon), которую нужно закрывать через универсальные коннекторы.
+Репозиторий имеет вложенную структуру с числовыми индексами.
 
----
-
-## 1️⃣ ЧТО ЕСТЬ В РЕПОЗИТОРИИ (Обзор по группам)
-
-Репозиторий огромен, но для нашей задачи релевантны следующие категории:
-
-*   **Scraping / Parsing:** Мощные решения на базе ScrapeGraphAI и Puppeteer. Есть готовые парсеры для Amazon и Google Maps.
-*   **Google Sheets:** Сотни шаблонов для синхронизации с CRM, Shopify и базами данных.
-*   **Social Media:** Отличные пайплайны для Instagram (публикация, сторис) и TikTok (генерация видео).
-*   **AI / LLM:** Сильные агенты на базе OpenAI и Gemini для классификации лидов и RAG (ответы по базе знаний).
-*   **Telegram & WhatsApp:** Готовые боты с поддержкой меню, AI-ответов и переключения на оператора.
-
----
-
-## 2️⃣ ОТОБРАННЫЕ ЛУЧШИЕ WORKFLOW (The Chosen Ones)
-
-Ниже представлен список workflow, которые составляют ядро нашей системы.
-
-### 📦 Парсинг и Товары (Sourcing)
-
-**1. Главный Парсер (Amazon Intelligence)**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/69/6974_Monitor_Amazon_Market_Intelligence_with_ScrapeGraphAI_to_Google_Docs.json`
-*   **📌 Название:** Monitor Amazon Market Intelligence with ScrapeGraphAI
-*   **🎯 Назначение:** Автоматический мониторинг цен, рейтингов и наличия товаров на Amazon.
-*   **🔧 Используемые инструменты:** `n8n-nodes-scrapegraphai`, Google Docs/Sheets.
-*   **📊 Место в pipeline:** Источники → Google Sheets (Единая база).
-*   **✅ Готовность:** Можно использовать сразу (требуется ключ ScrapeGraphAI).
-*   **🔗 Связка с другими workflow:** Передает данные в Google Sheets, которые затем используются для контента и витрины.
-
-**2. Fallback Парсер (Сравнение цен)**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/66/6664_AI-Powered_Product_Research___Price_Comparison_with_Google_Search_and_OpenAI.json`
-*   **📌 Название:** AI-Powered Product Research & Price Comparison
-*   **🎯 Назначение:** Поиск цен на товар по всему интернету через Google, если на Amazon нет данных.
-*   **🔧 Используемые инструменты:** Google Custom Search API, OpenAI.
-*   **📊 Место в pipeline:** Fallback слой (если основной парсер не дал цены).
-*   **✅ Готовность:** Высокая. Использует стандартные ноды.
-*   **🔗 Связка с другими workflow:** Запускается по триггеру ошибки от основного парсера.
-
----
-
-### 📊 Данные и Склад (Inventory)
-
-**3. Синхронизация Товаров**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/20/2089_Shopify_to_Google_Sheets_Product_Sync_Automation.json`
-*   **📌 Название:** Shopify to Google Sheets Product Sync
-*   **🎯 Назначение:** Синхронизация базы товаров. Хотя в названии Shopify, логика идеально подходит для любой "Master Table" структуры.
-*   **🔧 Используемые инструменты:** Google Sheets, HTTP Request.
-*   **📊 Место в pipeline:** База данных → Витрина.
-*   **✅ Готовность:** Требует адаптации (замена триггера Shopify на Schedule/Webhook).
-*   **🔗 Связка с другими workflow:** Получает данные от парсеров, отдает данные ботам.
-
-**4. Контроль Остатков**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/66/6636_Monitor_Construction_Stock___Send_Low_Inventory_Alerts_with_Google_Sheets.json`
-*   **📌 Название:** Monitor Stock & Send Alerts
-*   **🎯 Назначение:** Мониторит колонку "Наличие" в Google Sheets и шлет алерт менеджеру, если товар заканчивается.
-*   **🔧 Используемые инструменты:** Google Sheets, Telegram/Slack.
-*   **📊 Место в pipeline:** Контроль и Логирование.
-*   **✅ Готовность:** Высокая.
-*   **🔗 Связка с другими workflow:** Работает поверх основной таблицы товаров.
-
----
-
-### 📱 Контент и Соцсети (Social Media)
-
-**5. Instagram Публикация**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/44/4498_Schedule___Publish_All_Instagram_Content_Types_with_Facebook_Graph_API.json`
-*   **📌 Название:** Schedule & Publish All Instagram Content
-*   **🎯 Назначение:** Публикация фото и Reels в Instagram по расписанию.
-*   **🔧 Используемые инструменты:** Facebook Graph API.
-*   **📊 Место в pipeline:** Контент (Витрина).
-*   **✅ Готовность:** Высокая.
-*   **🔗 Связка с другими workflow:** Берет фото и тексты из папки Google Drive, куда их кладет владелец или парсер.
-
-**6. Авто-постинг из Google Drive**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/34/3478_Automate_Instagram_Posts_with_Google_Drive__AI_Captions___Facebook_API.json`
-*   **📌 Название:** Automate Instagram Posts with Google Drive & AI Captions
-*   **🎯 Назначение:** Вы кидаете фото товара в папку → Бот сам пишет продающий пост через AI и публикует.
-*   **🔧 Используемые инструменты:** Google Drive, OpenAI, Instagram API.
-*   **📊 Место в pipeline:** "Быстрый контент" (со склада в ленту).
-*   **✅ Готовность:** Очень высокая. Идеально для "живого" бизнеса.
-*   **🔗 Связка с другими workflow:** Работает автономно.
-
----
-
-### 💬 Коммуникации (Telegram & WhatsApp)
-
-**7. Умный Бот Поддержки (Telegram)**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/92/9234_Customer_Support___Lead_Collection_Chatbot_with_RAG__GPT-4o__Sheets___Telegram.json`
-*   **📌 Название:** Customer Support & Lead Collection Chatbot with RAG
-*   **🎯 Назначение:** **КРИТИЧНО ВАЖНЫЙ ЭЛЕМЕНТ**. Отвечает на вопросы по базе знаний (FAQ, Гарантия, Доставка) и собирает лиды (Имя, Телефон).
-*   **🔧 Используемые инструменты:** OpenAI, Pinecone (Vector DB), Telegram, Google Sheets.
-*   **📊 Место в pipeline:** Telegram Bot (Первый контакт).
-*   **✅ Готовность:** Очень высокая.
-*   **🔗 Связка с другими workflow:** Сохраняет лиды в Google Sheets для CRM.
-
-**8. WhatsApp Роутер Намерений**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/01/02/10240_Handle_WhatsApp_Customer_Inquiries_with_AI_and_Intent_Routing.json`
-*   **📌 Название:** Handle WhatsApp Customer Inquiries with AI and Intent Routing
-*   **🎯 Назначение:** Классифицирует сообщения в WhatsApp ("Купить", "Цена", "Поддержка"). Если "Купить" — зовет человека.
-*   **🔧 Используемые инструменты:** WhatsApp Business API, AI Classifier.
-*   **📊 Место в pipeline:** WhatsApp (Закрытие сделки).
-*   **✅ Готовность:** Очень высокая. Лучший шаблон в репо для WhatsApp.
-*   **🔗 Связка с другими workflow:** Передает горячих клиентов менеджеру.
-
-**9. Передача Человеку (Human Handoff)**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/33/3350_Telegram_AI_Bot-to-Human_Handoff_for_Sales_Calls.json`
-*   **📌 Название:** Telegram AI Bot-to-Human Handoff
-*   **🎯 Назначение:** Останавливает AI и уведомляет менеджера, когда клиент хочет "живого общения".
-*   **🔧 Используемые инструменты:** Telegram.
-*   **📊 Место в pipeline:** Контроль сделки.
-*   **✅ Готовность:** Высокая.
-*   **🔗 Связка с другими workflow:** Интегрируется в чат-ботов.
-
----
-
-## 🧠 Логика и CRM
-
-**10. Классификатор Лидов**
-*   **📁 Путь в репо:** `/n8n-workflow-all-templates/00/00/93/9346_Automate_Lead_Intent_Classification_from_Google_Sheets_to_ClickUp_with_Azure_GPT-4.json`
-*   **📌 Название:** Automate Lead Intent Classification
-*   **🎯 Назначение:** Анализирует записи в таблице и ставит теги (Hot/Cold/Spam).
-*   **🔧 Используемые инструменты:** OpenAI (можно заменить Azure на обычный), Google Sheets.
-*   **📊 Место в pipeline:** CRM логика.
-*   **✅ Готовность:** Высокая.
-*   **🔗 Связка с другими workflow:** Обрабатывает данные, собранные ботами.
-
----
-
-## 🏗️ ФИНАЛЬНАЯ АРХИТЕКТУРА
-
-```mermaid
-graph TD
-    A[Источники: Amazon/Web] -->|Workflow #6974| B(Google Sheets: База Товаров)
-    B -->|Наценка и Логика| B
-
-    B -->|Фото + Инфо| C{Каналы Продаж}
-
-    C -->|Workflow #3478| D[Instagram: Витрина]
-    C -->|Workflow #4714| E[Telegram Channel: Новости]
-
-    F[Клиент] -->|Вопрос| G{Telegram Bot #9234}
-    G -->|FAQ| G
-    G -->|Лид| H[Google Sheets: Лиды]
-
-    F -->|WhatsApp| I{Router #10240}
-    I -->|Вопрос| J[AI Ответ]
-    I -->|Купить| K[Менеджер / Владелец]
-
-    K -->|Закрытие| L[Продажа]
+**Корневая структура:**
+```
+📁 n8n-workflow-all-templates/
+└── 📁 00/
+    ├── 📁 00/
+    │   ├── 📁 00 (12 файлов)
+    │   ├── ...
+    │   └── 📁 99 (60 файлов)
+    └── 📁 01/
+        ├── 📁 00 (78 файлов)
+        ├── ...
+        └── 📁 18 (10 файлов)
 ```
 
+**Всего файлов:** Более 7400 шаблонов JSON.
+
 ---
 
-## ❌ ЧЕГО НЕТ В РЕПОЗИТОРИИ (Gaps)
+## 📋 ЗАДАНИЕ 2: ПРОВЕРКА ФАЙЛОВ (Scraping)
 
-1.  **Специфичная логистика ОАЭ (Noon API):**
-    *   В репо нет готовых интеграций с Noon.
-    *   **Решение:** Использовать `Workflow #6974` (ScrapeGraphAI) для парсинга сайта Noon как обычного веб-сайта, либо вносить данные вручную.
-2.  **Калькулятор Наценки:**
-    *   Нет отдельного workflow "Calculator".
-    *   **Решение:** Реализовать логику `Цена * 1.20` внутри Google Sheets формулами или внутри `Workflow #2089` (Shopify Sync) перед записью данных.
-3.  **WhatsApp Провайдер:**
-    *   Workflow #10240 требует подключенного WhatsApp Business API (через Meta или 360Dialog). Это внешняя настройка.
+### 1. Amazon Market Intelligence
+**📁 Точный путь к файлу:**
+`/n8n-workflow-all-templates/00/00/69/6974_Monitor_Amazon_Market_Intelligence_with_ScrapeGraphAI_to_Google_Docs.json`
 
-## 💡 РЕКОМЕНДАЦИЯ К ЗАПУСКУ
+**📌 Название файла:**
+`Monitor Amazon Market Intelligence with ScrapeGraphAI to Google Docs`
 
-Для быстрого старта "без хаоса" возьмите только эти 5 workflow:
-1.  **#6974** — чтобы наполнять таблицу ценами с Amazon.
-2.  **#3478** — чтобы кидать фото в Drive, а они сами летели в Instagram.
-3.  **#9234** — чтобы Telegram-бот сам отвечал на вопросы "Где находитесь?" и "Есть гарантия?".
-4.  **#10240** — чтобы WhatsApp фильтровал мусор и звал вас только на продажу.
-5.  **#4714** — чтобы вы видели новые заявки в своем личном Telegram.
+**🔧 Список нод внутри workflow:**
+*   **Trigger:** Daily Schedule (Cron: `0 6 * * *`)
+*   **Amazon Product Scraper** (`n8n-nodes-scrapegraphai.scrapegraphAi`)
+*   **Product Analyzer** (Code Node - расчет средних цен, рейтингов)
+*   **Keyword Analyzer** (Code Node - SEO анализ)
+*   **Pricing Strategy** (Code Node - рекомендации по ценообразованию)
+*   **Report Generator** (Code Node - создание структуры отчета)
+*   **Create Google Doc** (`n8n-nodes-base.googleDocs` - сохранение отчета)
 
-Это даст 80% автоматизации при минимуме усилий.
+**🔑 Какие credentials нужны:**
+*   ScrapeGraphAI API Key
+*   Google Docs OAuth2 API
+
+**📅 Дата последнего изменения файла:**
+`2025-11-10` (из метаданных файла)
+
+---
+
+### 2. Fallback Scraper (Comparison)
+**📁 Точный путь к файлу:**
+`/n8n-workflow-all-templates/00/00/66/6664_AI-Powered_Product_Research___Price_Comparison_with_Google_Search_and_OpenAI.json`
+
+**📌 Название файла:**
+`AI-Powered Product Research & Price Comparison with Google Search and OpenAI`
+
+**🔧 Список нод внутри workflow:**
+*   **Trigger:** Manual Trigger
+*   **Set Product Description** (Ввод данных)
+*   **AI: Generate Search Queries** (`n8n-nodes-base.openAi`)
+*   **Split Queries** (Function)
+*   **Google Custom Search (CSE)** (`n8n-nodes-base.googleCustomSearch`)
+*   **Combine Search Results** (Set)
+*   **AI: Summarize Products & Prices** (`n8n-nodes-base.openAi`)
+*   **Send Report Email** (`n8n-nodes-base.gmail`)
+
+**🔑 Какие credentials нужны:**
+*   OpenAI API Key
+*   Google Custom Search API Key
+*   Gmail API (OAuth2)
+
+**📅 Дата последнего изменения файла:**
+`2025-11-10` (из метаданных файла)
+
+---
+
+## 📋 ЗАДАНИЕ 3: КОНКРЕТНЫЕ КАТЕГОРИИ
+
+### 3.1 Парсинг (Scraping)
+*   **Путь:** `/n8n-workflow-all-templates/00/00/69/6974_Monitor_Amazon_Market_Intelligence_with_ScrapeGraphAI_to_Google_Docs.json`
+    *   **Что парсит:** Amazon (цены, рейтинги).
+    *   **Инструменты:** ScrapeGraphAI.
+*   **Путь:** `/n8n-workflow-all-templates/00/00/24/2431_Ultimate_Scraper_Workflow_for_n8n.json`
+    *   **Что парсит:** Любой HTML сайт.
+    *   **Инструменты:** Puppeteer / HTTP Request.
+*   **Путь:** `/n8n-workflow-all-templates/00/00/69/6993_Scrape_Google_Maps_by_area___Generate_Outreach_Messages_for_Lead_Generation.json`
+    *   **Что парсит:** Google Maps (бизнес-данные).
+    *   **Инструменты:** Apify.
+
+### 3.2 Google Sheets
+*   **Путь:** `/n8n-workflow-all-templates/00/00/20/2089_Shopify_to_Google_Sheets_Product_Sync_Automation.json`
+    *   **Что делает:** Синхронизирует товары (название, цена, SKU).
+    *   **Синхронизация:** Shopify → Google Sheets.
+*   **Путь:** `/n8n-workflow-all-templates/00/00/66/6636_Monitor_Construction_Stock___Send_Low_Inventory_Alerts_with_Google_Sheets.json`
+    *   **Что делает:** Мониторит колонку "Quantity" и шлет уведомления.
+    *   **Синхронизация:** Google Sheets → Alerts.
+
+### 3.3 Telegram
+*   **Путь:** `/n8n-workflow-all-templates/00/00/92/9234_Customer_Support___Lead_Collection_Chatbot_with_RAG__GPT-4o__Sheets___Telegram.json`
+    *   **Что делает:** AI-бот поддержки с базой знаний (RAG). Собирает лиды.
+    *   **AI:** OpenAI (GPT-4o), Pinecone (Vector DB).
+*   **Путь:** `/n8n-workflow-all-templates/00/00/47/4714_Query_and_Monitor_Shopify_Orders_via_Telegram_Bot_Commands.json`
+    *   **Что делает:** Командный бот для менеджера (проверка заказов).
+    *   **AI:** Нет (Команды).
+
+### 3.4 WhatsApp
+*   **Путь:** `/n8n-workflow-all-templates/00/01/02/10240_Handle_WhatsApp_Customer_Inquiries_with_AI_and_Intent_Routing.json`
+    *   **Что делает:** Классификация намерений ("Купить", "Поддержка") и роутинг.
+    *   **Провайдер:** Generic WhatsApp API (настраивается под Twilio/Meta).
+*   **Путь:** `/n8n-workflow-all-templates/00/00/15/1525_Send_a_Whatsapp_message_via_Twilio_when_a_certain_Onfleet_event_happens.json`
+    *   **Что делает:** Отправка уведомлений о статусе заказа.
+    *   **Провайдер:** Twilio.
+
+### 3.5 Social Media (Instagram, TikTok)
+*   **Путь:** `/n8n-workflow-all-templates/00/00/34/3478_Automate_Instagram_Posts_with_Google_Drive__AI_Captions___Facebook_API.json`
+    *   **Что делает:** Берет фото из Google Drive, генерирует текст через AI, постит в Instagram.
+    *   **API:** Facebook Graph API.
+*   **Путь:** `/n8n-workflow-all-templates/00/00/49/4969_Automated_TikTok_Video_Creation_Pipeline_with_GPT-4o-mini_and_Sisif.ai.json`
+    *   **Что делает:** Генерирует идеи и видео для TikTok.
+    *   **API:** Sisif.ai.
+
+### 3.6 AI / LLM
+*   **Путь:** `/n8n-workflow-all-templates/00/00/93/9346_Automate_Lead_Intent_Classification_from_Google_Sheets_to_ClickUp_with_Azure_GPT-4.json`
+    *   **Что делает:** Классификация лидов (Hot/Cold) из таблицы.
+    *   **Модель:** Azure OpenAI GPT-4.
+
+---
+
+## 📋 ЗАДАНИЕ 4: ГЛУБОКИЙ АНАЛИЗ ОДНОГО ФАЙЛА
+
+**Выбранный файл:** `10240_Handle_WhatsApp_Customer_Inquiries_with_AI_and_Intent_Routing.json`
+
+**📁 Путь к файлу:**
+`/n8n-workflow-all-templates/00/01/02/10240_Handle_WhatsApp_Customer_Inquiries_with_AI_and_Intent_Routing.json`
+
+**📌 Название:**
+`Handle WhatsApp Customer Inquiries with AI and Intent Routing`
+
+**🔧 Список ВСЕХ нод (по порядку):**
+1.  **WhatsApp Trigger** (Webhook) - Получение сообщения.
+2.  **Parse WhatsApp Message Data** (Code) - Извлечение текста, ID чата, имени.
+3.  **Classify User Intent** (Code) - Логика JS для определения намерения (Цена, Купить, Приветствие) по ключевым словам.
+4.  **Route by Intent** (Switch) - Маршрутизация на основе `intent`.
+5.  **Generate Product Response** (Code) - Ветка "Product": генерация ответа с товарами.
+6.  **Generate Contact Info Response** (Code) - Ветка "Contact": статический ответ с контактами.
+7.  **Generate Default Response** (Code) - Ветка "Default": меню помощи.
+8.  **Build AI System Prompt** (Code) - Ветка "AI": сборка промпта с контекстом магазина.
+9.  **Google Gemini Chat Model** (Model) - Подключение модели.
+10. **Google Docs - Product Catalog** (Tool) - Подключение каталога как инструмента.
+11. **AI Agent - Handle Complex Queries** (Agent) - Обработка сложных вопросов через LangChain.
+12. **Conversation Memory** (Memory) - Память диалога.
+13. **Format AI Response** (Code) - Форматирование ответа AI.
+14. **Send WhatsApp Response** (WhatsApp Node) - Отправка ответа пользователю.
+
+**🔑 Credentials:**
+*   WhatsApp OAuth account (Meta/Business API)
+*   Google Gemini(PaLM) Api account
+*   Google Docs account (Optional - для RAG)
+
+**⚙️ Параметры конфигурации:**
+*   `webhookId` в триггере.
+*   Кастомизация JS-кода в ноде `Classify User Intent` (добавить свои ключевые слова "iPhone", "Samsung").
+*   Кастомизация системного промпта в ноде `Build AI System Prompt` (вписать имя магазина, политику возврата).
+
+**📅 Дата последнего изменения:**
+`2025-11-10`
+
+**✅ Готовность к использованию:**
+**Высокая.** Требует только настройки ключей и замены текстов в Code-нодах под специфику магазина. Логика роутинга уже реализована.
+
+---
+
+## 📋 ЗАДАНИЕ 5: ЧТО РЕАЛЬНО ОТСУТСТВУЕТ
+
+**❌ ЧЕГО НЕТ В РЕПОЗИТОРИИ (подтверждено):**
+
+1.  **Интеграция с Noon (Маркетплейс ОАЭ)**
+    *   **Искал в папках:** `00/00/69` (Scraping), `00/00/20` (API Integrations).
+    *   **Искал по названиям:** `noon`, `noon.com`, `uae market`.
+    *   **Результат:** 0 совпадений.
+
+2.  **Провайдер 360dialog (WhatsApp)**
+    *   **Искал в папках:** `00/00/15`, `00/01/02`.
+    *   **Искал по названиям:** `360dialog`.
+    *   **Результат:** 0 совпадений. (Есть только generic WhatsApp и Twilio).
+
+3.  **Калькулятор Наценки (Markup/Margin)**
+    *   **Искал в папках:** `00/00/20` (Sheets), `00/00/66` (Analytics).
+    *   **Искал по названиям:** `markup`, `margin calculator`, `price formula`.
+    *   **Результат:** 0 совпадений. (Нужно делать вручную через Code Node).
+
+**✅ ЧТО ЕСТЬ, НО НЕ ИДЕАЛЬНО:**
+
+1.  **Синхронизация Склада (Shopify Sync)**
+    *   **Путь:** `/n8n-workflow-all-templates/00/00/20/2089_Shopify_to_Google_Sheets_Product_Sync_Automation.json`
+    *   **Проблема:** Завязана на триггер Shopify.
+    *   **Как адаптировать:** Заменить триггер на `Schedule` + `Google Sheets (Read)` или `Webhook` от парсера. Логика маппинга полей подходит.
+
+---
+
+## 📋 ЗАДАНИЕ 6: РАБОЧАЯ АРХИТЕКТУРА (С ДОКАЗАТЕЛЬСТВАМИ)
+
+```
+🏗️ АРХИТЕКТУРА СИСТЕМЫ
+
+1️⃣ ПАРСИНГ ЦЕН
+Workflow: Monitor Amazon Market Intelligence with ScrapeGraphAI
+Путь: /n8n-workflow-all-templates/00/00/69/6974_Monitor_Amazon_Market_Intelligence_with_ScrapeGraphAI_to_Google_Docs.json
+Что делает: Ежедневно парсит цены и наличие конкурентов на Amazon.
+Куда передаёт данные: В Google Sheets (базу товаров).
+
+2️⃣ БАЗА ТОВАРОВ (Google Sheets)
+Workflow: Shopify to Google Sheets Product Sync Automation
+Путь: /n8n-workflow-all-templates/00/00/20/2089_Shopify_to_Google_Sheets_Product_Sync_Automation.json
+Что делает: (После адаптации) Служит единым источником правды.
+Откуда получает: От ScrapeGraphAI (#6974).
+Куда передаёт: В ботов и соцсети.
+
+3️⃣ КОНТЕНТ (Instagram)
+Workflow: Automate Instagram Posts with Google Drive & AI Captions
+Путь: /n8n-workflow-all-templates/00/00/34/3478_Automate_Instagram_Posts_with_Google_Drive__AI_Captions___Facebook_API.json
+Что делает: Берет фото из папки Drive, пишет пост через AI и публикует.
+Откуда берёт данные: Google Drive (папка "To Post").
+
+4️⃣ TELEGRAM BOT (Первая линия)
+Workflow: Customer Support & Lead Collection Chatbot with RAG
+Путь: /n8n-workflow-all-templates/00/00/92/9234_Customer_Support___Lead_Collection_Chatbot_with_RAG__GPT-4o__Sheets___Telegram.json
+Что делает: Отвечает на FAQ по базе знаний (RAG) и собирает контакты лидов.
+Куда передаёт лиды: В Google Sheets (лист "Leads").
+
+5️⃣ WHATSAPP (Закрытие сделки)
+Workflow: Handle WhatsApp Customer Inquiries with AI and Intent Routing
+Путь: /n8n-workflow-all-templates/00/01/02/10240_Handle_WhatsApp_Customer_Inquiries_with_AI_and_Intent_Routing.json
+Что делает: Фильтрует вопросы. Простые -> AI, "Купить" -> Менеджер.
+Связь: Использует общую базу знаний о продуктах из шага 2.
+
+6️⃣ CRM / ЛОГИ
+Workflow: Automate Lead Intent Classification
+Путь: /n8n-workflow-all-templates/00/00/93/9346_Automate_Lead_Intent_Classification_from_Google_Sheets_to_ClickUp_with_Azure_GPT-4.json
+Что делает: Анализирует новые лиды в таблице и ставит приоритет (Hot/Warm).
+```
