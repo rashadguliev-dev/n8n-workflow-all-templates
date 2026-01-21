@@ -1,0 +1,138 @@
+{
+  "name": "03_Communications_Router (Antigravity)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-webhook",
+        "options": {}
+      },
+      "name": "Unified Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "chat-webhook"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "name": "Buffer (Debounce)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "id": "buffer"
+    },
+    {
+      "parameters": {
+        "modelId": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "content": "Classify the intent of this message: '{{ $json.body.message }}'. Return JSON: { \"intent\": \"buy\" | \"support\" | \"spam\" }"
+            }
+          ]
+        },
+        "jsonOutput": true
+      },
+      "name": "AI Intent Classifier",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "id": "ai-classifier",
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.intent }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "buy"
+            },
+            {
+              "value2": "support"
+            }
+          ]
+        }
+      },
+      "name": "Router (Switch)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "id": "router"
+    },
+    {
+      "parameters": {
+        "chatId": "MANAGER_GROUP_ID",
+        "text": "🔥 New Lead! \nMessage: {{ $('Unified Chat Webhook').item.json.body.message }}"
+      },
+      "name": "Notify Manager (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [800, -100],
+      "id": "notify-manager",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-creds",
+          "name": "Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": "9234_RAG_Bot"
+      },
+      "name": "Trigger RAG Bot",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [800, 100],
+      "id": "trigger-rag"
+    },
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "error-trigger"
+    },
+    {
+      "parameters": {
+        "workflowId": "99_Error_Handler"
+      },
+      "name": "Log Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "id": "log-error"
+    }
+  ],
+  "connections": {
+    "Unified Chat Webhook": {
+      "main": [[{ "node": "Buffer (Debounce)", "type": "main", "index": 0 }]]
+    },
+    "Buffer (Debounce)": {
+      "main": [[{ "node": "AI Intent Classifier", "type": "main", "index": 0 }]]
+    },
+    "AI Intent Classifier": {
+      "main": [[{ "node": "Router (Switch)", "type": "main", "index": 0 }]]
+    },
+    "Router (Switch)": {
+      "main": [
+        [{ "node": "Notify Manager (Telegram)", "type": "main", "index": 0 }],
+        [{ "node": "Trigger RAG Bot", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Trigger": {
+      "main": [[{ "node": "Log Error", "type": "main", "index": 0 }]]
+    }
+  }
+}

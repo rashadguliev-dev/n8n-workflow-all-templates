@@ -1,0 +1,77 @@
+{
+  "name": "02_Inventory_Sync (Antigravity)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sync-inventory",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "webhook-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Schema Validation\nconst item = $input.all()[0].json;\nif (!item.title || !item.price || !item.source) {\n  throw new Error(\"Invalid Schema: Missing title, price or source\");\n}\nif (item.price < 0) {\n  throw new Error(\"Invalid Price: Negative value\");\n}\nreturn item;"
+      },
+      "name": "Validate Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 0],
+      "id": "validate-schema"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "A:H",
+        "options": {
+          "valueInputOption": "USER_ENTERED"
+        }
+      },
+      "name": "Update Master Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [400, 0],
+      "id": "update-sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets Account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 200],
+      "id": "error-trigger"
+    },
+    {
+      "parameters": {
+        "workflowId": "99_Error_Handler"
+      },
+      "name": "Log Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [200, 200],
+      "id": "log-error"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Validate Schema", "type": "main", "index": 0 }]]
+    },
+    "Validate Schema": {
+      "main": [[{ "node": "Update Master Sheet", "type": "main", "index": 0 }]]
+    },
+    "Error Trigger": {
+      "main": [[{ "node": "Log Error", "type": "main", "index": 0 }]]
+    }
+  }
+}
