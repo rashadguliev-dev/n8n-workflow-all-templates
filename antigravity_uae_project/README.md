@@ -26,7 +26,12 @@ All workflows have been refactored to adhere to **Antigravity** best practices: 
   - **Function:** The AI agent answering support questions using Pinecone/RAG.
   - **Source:** Originally workflow #9234.
 
-### 5. Utilities
+### 5. Content (Socials)
+- `05_Content_Automation.json`
+  - **Function:** Publishes inventory items to Instagram/TikTok.
+  - **Antigravity Features:** Image URL Pre-check (HEAD request) to prevent failed posts.
+
+### 6. Utilities
 - `99_Error_Handler.json`
   - **Function:** Centralized error logging to Telegram Manager Group.
   - **Antigravity Features:** Standardized Error Object.
