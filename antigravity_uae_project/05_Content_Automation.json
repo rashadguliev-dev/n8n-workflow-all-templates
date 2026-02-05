@@ -1,0 +1,144 @@
+{
+  "name": "05_Content_Automation (Antigravity)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutes": 0
+            }
+          ]
+        }
+      },
+      "name": "Schedule (Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "operation": "lookup",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "A:H",
+        "options": {
+          "lookupColumn": "Status",
+          "lookupValue": "Ready"
+        }
+      },
+      "name": "Get Ready Items",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [200, 0],
+      "id": "get-items",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [400, 0],
+      "id": "split-batches"
+    },
+    {
+      "parameters": {
+        "method": "HEAD",
+        "url": "={{ $json.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "name": "Verify Image Access",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 0],
+      "id": "verify-image",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.statusCode }}",
+              "value2": 200
+            }
+          ]
+        }
+      },
+      "name": "Check Image Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 0],
+      "id": "check-image"
+    },
+    {
+      "parameters": {
+        "modelId": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "content": "Write a 3-line Instagram caption for {{ $json.title }} at {{ $json.price }} AED. Include 3 hashtags. No marketing fluff."
+            }
+          ]
+        }
+      },
+      "name": "Generate Caption",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [1000, -100],
+      "id": "generate-caption",
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-creds",
+          "name": "OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": "99_Error_Handler"
+      },
+      "name": "Log Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "id": "log-error"
+    }
+  ],
+  "connections": {
+    "Schedule (Daily)": {
+      "main": [[{ "node": "Get Ready Items", "type": "main", "index": 0 }]]
+    },
+    "Get Ready Items": {
+      "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]]
+    },
+    "Split In Batches": {
+      "main": [[{ "node": "Verify Image Access", "type": "main", "index": 0 }]]
+    },
+    "Verify Image Access": {
+      "main": [[{ "node": "Check Image Valid", "type": "main", "index": 0 }]]
+    },
+    "Check Image Valid": {
+      "main": [
+        [{ "node": "Generate Caption", "type": "main", "index": 0 }],
+        [{ "node": "Log Error", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

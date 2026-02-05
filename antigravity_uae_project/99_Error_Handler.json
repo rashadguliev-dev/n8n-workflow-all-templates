@@ -1,0 +1,38 @@
+{
+  "name": "99_Error_Handler (Antigravity)",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "MANAGER_GROUP_ID",
+        "text": "🚨 **Workflow Error Detected** 🚨\n\n**Workflow:** {{ $json.workflow.name }}\n**Node:** {{ $json.execution.lastNodeExecuted }}\n**Error:** {{ $json.message }}\n**Link:** {{ $json.execution.url }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "name": "Alert Manager",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "id": "alert-manager",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-creds",
+          "name": "Telegram Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Alert Manager", "type": "main", "index": 0 }]]
+    }
+  }
+}
