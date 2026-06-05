@@ -1,0 +1,188 @@
+{
+  "name": "01_DeenFlow_Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "deenflow/dashboard",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.aladhan.com/v1/timingsByCity",
+        "sendQueryParams": true,
+        "queryParams": {
+          "parameters": [
+            {
+              "name": "city",
+              "value": "={{ $json.query.city || 'Dubai' }}"
+            },
+            {
+              "name": "country",
+              "value": "={{ $json.query.country || 'UAE' }}"
+            },
+            {
+              "name": "method",
+              "value": "4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Get Prayer Times",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.alquran.cloud/v1/ayah/random/editions/quran-uthmani,en.sahih",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Get Ayah of the Day",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hadith.gading.dev/books/bukhari?range=1-300",
+        "options": {}
+      },
+      "id": "4",
+      "name": "Get Hadith Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const hadiths = $node[\"Get Hadith Batch\"].json.data.hadiths;\nconst randomHadith = hadiths[Math.floor(Math.random() * hadiths.length)];\n\nconst duas = [\n  {\n    \"arabic\": \"اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ\",\n    \"translation\": \"O Allah, I seek refuge in You from anxiety and sorrow.\",\n    \"source\": \"Sahih Bukhari 7/158\"\n  },\n  {\n    \"arabic\": \"رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ\",\n    \"translation\": \"My Lord, forgive me and accept my repentance, for You are the Receiver of Repentance, the Merciful.\",\n    \"source\": \"Abu Dawud, At-Tirmidhi\"\n  }\n];\nconst randomDua = duas[Math.floor(Math.random() * duas.length)];\n\nreturn { \n  hadith_text: randomHadith.contents,\n  hadith_number: randomHadith.number,\n  hadith_source: \"Sahih Bukhari\",\n  dua_arabic: randomDua.arabic,\n  dua_translation: randomDua.translation,\n  dua_source: randomDua.source\n};"
+      },
+      "id": "5",
+      "name": "Select Daily Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const pTimes = $node[\"Get Prayer Times\"].json.data.timings;\nconst location = $node[\"Get Prayer Times\"].json.data.meta.city;\nconst ayah = $node[\"Get Ayah of the Day\"].json.data[0];\nconst ayahEn = $node[\"Get Ayah of the Day\"].json.data[1];\nconst content = $node[\"Select Daily Content\"].json;\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>DeenFlow — Daily Salafi Muslim Life Assistant</title>\n    <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap\" rel=\"stylesheet\">\n    <style>\n        :root {\n            --bg: #0A0A0A;\n            --card-bg: #141414;\n            --primary: #4CAF50;\n            --text-main: #E0E0E0;\n            --text-dim: #888888;\n            --accent: #D4AF37;\n            --card-border: #222;\n        }\n        body {\n            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;\n            background-color: var(--bg);\n            color: var(--text-main);\n            margin: 0;\n            padding: 20px;\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n            line-height: 1.6;\n        }\n        .container {\n            max-width: 480px;\n            width: 100%;\n        }\n        header {\n            text-align: center;\n            margin-bottom: 40px;\n            padding-top: 20px;\n        }\n        header h1 {\n            font-size: 28px;\n            font-weight: 300;\n            letter-spacing: 4px;\n            color: var(--accent);\n            margin: 0;\n            text-transform: uppercase;\n        }\n        .card {\n            background-color: var(--card-bg);\n            border: 1px solid var(--card-border);\n            border-radius: 20px;\n            padding: 24px;\n            margin-bottom: 24px;\n            box-shadow: 0 10px 30px rgba(0,0,0,0.5);\n        }\n        .card-title {\n            font-size: 11px;\n            color: var(--text-dim);\n            text-transform: uppercase;\n            letter-spacing: 2px;\n            margin-bottom: 20px;\n            display: block;\n            font-weight: 600;\n        }\n        .prayer-grid {\n            display: flex;\n            justify-content: space-between;\n            gap: 8px;\n        }\n        .prayer-time {\n            text-align: center;\n            flex: 1;\n        }\n        .prayer-name {\n            font-size: 10px;\n            color: var(--text-dim);\n            margin-bottom: 4px;\n        }\n        .prayer-val {\n            font-size: 14px;\n            font-weight: 600;\n            color: var(--accent);\n        }\n        .quran-arabic {\n            font-family: serif;\n            font-size: 24px;\n            text-align: right;\n            margin-bottom: 16px;\n            color: var(--text-main);\n        }\n        .quran-trans {\n            font-size: 14px;\n            color: var(--text-dim);\n            font-style: italic;\n        }\n        .hadith-content {\n            font-size: 14px;\n            color: var(--text-main);\n        }\n        .source {\n            font-size: 10px;\n            color: var(--primary);\n            margin-top: 12px;\n            display: block;\n            font-weight: 600;\n        }\n        .reminder-text {\n            font-size: 20px;\n            text-align: center;\n            color: var(--accent);\n            font-style: italic;\n            font-weight: 300;\n        }\n        footer {\n            text-align: center;\n            font-size: 10px;\n            color: var(--text-dim);\n            margin-top: 50px;\n            letter-spacing: 1px;\n            opacity: 0.6;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <header>\n            <h1>DeenFlow</h1>\n            <p style=\"font-size: 12px; color: var(--text-dim); margin-top: 8px;\">Daily Assistant &bull; ${location}</p>\n        </header>\n\n        <div class=\"card\">\n            <span class=\"card-title\">Prayer Times</span>\n            <div class=\"prayer-grid\">\n                <div class=\"prayer-time\"> <div class=\"prayer-name\">Fajr</div> <div class=\"prayer-val\">${pTimes.Fajr}</div> </div>\n                <div class=\"prayer-time\"> <div class=\"prayer-name\">Dhuhr</div> <div class=\"prayer-val\">${pTimes.Dhuhr}</div> </div>\n                <div class=\"prayer-time\"> <div class=\"prayer-name\">Asr</div> <div class=\"prayer-val\">${pTimes.Asr}</div> </div>\n                <div class=\"prayer-time\"> <div class=\"prayer-name\">Maghrib</div> <div class=\"prayer-val\">${pTimes.Maghrib}</div> </div>\n                <div class=\"prayer-time\"> <div class=\"prayer-name\">Isha</div> <div class=\"prayer-val\">${pTimes.Isha}</div> </div>\n            </div>\n        </div>\n\n        <div class=\"card\">\n            <span class=\"card-title\">Ayah of the Day</span>\n            <div class=\"quran-arabic\">${ayah.text}</div>\n            <div class=\"quran-trans\">${ayahEn.text}</div>\n            <span class=\"source\">QUR'AN ${ayah.surah.number}:${ayah.numberInSurah}</span>\n        </div>\n\n        <div class=\"card\">\n            <span class=\"card-title\">Hadith of the Day</span>\n            <div class=\"hadith-content\">${content.hadith_text}</div>\n            <span class=\"source\">${content.hadith_source.toUpperCase()} &bull; #${content.hadith_number}</span>\n        </div>\n\n        <div class=\"card\">\n            <span class=\"card-title\">Dua of the Day</span>\n            <div class=\"quran-arabic\" style=\"font-size: 20px;\">${content.dua_arabic}</div>\n            <div class=\"hadith-content\">${content.dua_translation}</div>\n            <span class=\"source\">${content.dua_source.toUpperCase()}</span>\n        </div>\n\n        <div class=\"card\" style=\"background: transparent; border: none; box-shadow: none;\">\n            <div class=\"reminder-text\">\n                \"And whoever relies upon Allah &mdash; then He is sufficient for him.\"\n            </div>\n        </div>\n\n        <footer>\n            AUTHENTIC SALAFI LIFE COMPANION &bull; 2025\n        </footer>\n    </div>\n</body>\n</html>\n`;\n\nreturn { html };"
+      },
+      "id": "6",
+      "name": "Finalize HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "body": "={{ $json.html }}"
+      },
+      "id": "7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Prayer Times",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prayer Times": {
+      "main": [
+        [
+          {
+            "node": "Get Ayah of the Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ayah of the Day": {
+      "main": [
+        [
+          {
+            "node": "Get Hadith Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Hadith Batch": {
+      "main": [
+        [
+          {
+            "node": "Select Daily Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Daily Content": {
+      "main": [
+        [
+          {
+            "node": "Finalize HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
