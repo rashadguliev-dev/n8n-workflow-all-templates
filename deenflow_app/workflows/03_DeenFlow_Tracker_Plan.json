@@ -1,0 +1,167 @@
+{
+  "name": "03_DeenFlow_Tracker_Plan",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deenflow/log",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Log Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5
+            },
+            {
+              "triggerAtHour": 22
+            }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "your_google_sheet_id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Tracker"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ new Date().toISOString().split('T')[0] }}",
+            "User": "={{ $json.body.user_id || 'default_user' }}",
+            "Prayer_Count": "={{ $json.body.prayers_completed || 0 }}",
+            "Quran_Reading": "={{ $json.body.quran_pages || 0 }}",
+            "Dhikr": "={{ $json.body.dhikr_done ? 'Yes' : 'No' }}"
+          }
+        }
+      },
+      "id": "3",
+      "name": "Save to GSheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.life_mode || 'Worker' }}",
+              "value2": "Student"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Is Student Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "your_telegram_chat_id",
+        "text": "=📚 Student Mode Reminder: \n\nBefore you start your studies, make dua for beneficial knowledge: \n'Rabbi zidni 'ilman' (My Lord, increase me in knowledge).",
+        "additionalFields": {}
+      },
+      "id": "5",
+      "name": "Student Reminder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "your_telegram_chat_id",
+        "text": "=💼 Worker Mode Reminder: \n\nRemember Allah in your heart while you work. Your work can be worship if your intention is to provide for your family and remain independent.",
+        "additionalFields": {}
+      },
+      "id": "6",
+      "name": "Worker Reminder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Log Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save to GSheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Is Student Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Student Mode?": {
+      "main": [
+        [
+          {
+            "node": "Student Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Worker Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
